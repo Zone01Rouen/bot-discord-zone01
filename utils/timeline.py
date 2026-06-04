@@ -3,7 +3,7 @@ import re
 import json
 from datetime import datetime
 from utils.progress_fetcher import fetch_progress
-from utils.config_loader import load_config
+from utils.config_loader import load_config, channel_modo_id
 
 async def fetch_and_send_progress(bot):
     """Récupère la progression et envoie les embeds dans les salons appropriés."""
@@ -77,7 +77,6 @@ async def fetch_and_send_progress(bot):
             channel_name = f"channel_progress_{item['promotionName'].replace(' ', '_')}"
             channel_id = config.get(channel_name)
 
-            channel_modo_id = 1257310056546963479  # Remplace par l'ID de ton channel
             channel_modo = bot.get_channel(channel_modo_id)
 
             if channel_id:

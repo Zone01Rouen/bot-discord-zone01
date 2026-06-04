@@ -2,7 +2,7 @@ import discord
 import asyncio
 
 from utils.utils_function import contains_forbidden_words, extract_technologies
-from utils.config_loader import forum_channel_id, guild_id, technologies, role_ping_alternance
+from utils.config_loader import forum_channel_id, guild_id, technologies, role_ping_alternance, channel_modo_id
 from utils.intern_fetcher import fetch_api_intern
 from utils.utils_departement import get_departement
 
@@ -64,7 +64,7 @@ async def send_jobslist(bot, ctx=None, loading_message=None):
                     await loading_message.edit(embed=embed_error)
                 return  # Arrêter la fonction si la query n'est pas définie
             else:
-                channel_id = 1257310056546963479  # Remplace par l'ID de ton channel
+                channel_id = channel_modo_id
                 channel = bot.get_channel(channel_id)
                 if channel:
                     embed_error = discord.Embed(
@@ -235,7 +235,7 @@ async def send_jobslist(bot, ctx=None, loading_message=None):
                 )
                 await loading_message.edit(embed=embed_updated)
             else:
-                channel_id = 1257310056546963479
+                channel_id = channel_modo_id
                 channel = bot.get_channel(channel_id)
                 if channel and normandie_count > 0:
                     embed_update = discord.Embed(
