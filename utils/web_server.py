@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import os
 import time
 import uuid
 
@@ -27,6 +28,9 @@ from utils.logger import logger
 
 ZONE01_DOMAIN = "zone01normandie.org"
 ZONE01_API_URL = "https://api-zone01-rouen.deno.dev/api/v1"
+# Clé partagée pour autoriser les mutations de l'API Deno (doit être identique
+# à API_ADMIN_KEY côté API). Injectée au runtime via l'environnement.
+API_ADMIN_KEY = os.getenv("API_ADMIN_KEY", "")
 
 TOKEN_TTL = 600  # secondes (10 minutes)
 
@@ -331,6 +335,7 @@ async def _handle_post(request: web.Request, bot: discord.Client) -> web.Respons
             async with session.put(
                 f"{ZONE01_API_URL}/discord-users",
                 json={"login": login, "discord_id": discord_id},
+                headers={"X-Api-Key": API_ADMIN_KEY},
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as api_resp:
                 if not api_resp.ok:

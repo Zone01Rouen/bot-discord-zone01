@@ -14,8 +14,9 @@ COPY data ./data
 # Installer les dépendances
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copier le fichier .env
-COPY .env .
+# NB : on ne copie PAS .env dans l'image (cela graverait les secrets dans une
+# couche de l'image). Les variables sont injectées au runtime par
+# docker-compose via `env_file: .env`.
 
 EXPOSE 8080
 
