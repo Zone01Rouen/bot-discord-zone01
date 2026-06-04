@@ -72,15 +72,6 @@ async def on_error(event, *args, **kwargs):
 
 
 @bot.event
-async def on_message(message):
-    try:
-        # Your existing on_message code here
-        await bot.process_commands(message)
-    except Exception as e:
-        logger.error(f"Erreur dans on_message : {e}", category="bot")
-
-
-@bot.event
 async def on_resumed():
     logger.success("Bot reconnecté à Discord", category="bot")
 

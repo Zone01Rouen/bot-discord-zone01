@@ -286,6 +286,7 @@ async def _handle_post(request: web.Request, bot: discord.Client) -> web.Respons
     data = await request.post()
     token = data.get("token", "")
     login = data.get("login", "").strip()
+    # SECURITY: ne jamais logger password/credentials (collecte par conception, cf. sec-vulnerabilites V13)
     password = data.get("password", "")
 
     if not login or not password:

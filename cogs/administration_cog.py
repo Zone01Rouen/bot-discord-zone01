@@ -7,7 +7,7 @@ from dotenv import load_dotenv, set_key
 import json
 from datetime import datetime, timezone
 
-from utils.config_loader import forbidden_words
+from utils.config_loader import forbidden_words, channel_modo_id
 from utils.utils_fulltime import send_cdilist
 from utils.utils_function import is_admin, is_admin_slash
 from utils.utils_internship import send_jobslist
@@ -364,7 +364,6 @@ class Administration(commands.Cog):
             channel_name = f"channel_progress_{promotion_key.replace(' ', '_')}"
             channel_id = config.get(channel_name)
 
-            channel_modo_id = 1257310056546963479
             channel_modo = self.bot.get_channel(channel_modo_id)
 
             if channel_id:
