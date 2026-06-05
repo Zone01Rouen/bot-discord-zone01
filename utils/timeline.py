@@ -67,9 +67,11 @@ def extract_current_project(item):
         for track in ("rust", "java"):
             val = current.get(track)
             if val:
-                parts.append(f"{track.capitalize()}: {val}")
+                parts.append(f"{val} ({track.capitalize()})")
         if parts:
-            return " | ".join(parts)
+            # Stack Rust/Java : l'apprenant choisit l'un OU l'autre projet
+            # -> on affiche bien les deux options.
+            return " ou ".join(parts)
     # Rétro-compat éventuelle : ancien champ plat.
     if item.get("currentProject"):
         return str(item["currentProject"])
