@@ -159,6 +159,9 @@ async def fetch_and_send_progress(bot):
                 category="progress",
             )
             continue
+        # Nom long pour l'affichage (l'embed historique montrait le titre,
+        # ex. « Promotion 1 - Année 2025 ») ; la `key` sert au mapping de salon.
+        promo_title = promotion.get("title") or item.get("promotionName") or promo_name
 
         # Statut : 'success'/'error' (string) côté API, bool en rétro-compat.
         status = item.get("status")
@@ -180,7 +183,7 @@ async def fetch_and_send_progress(bot):
         # --- Création de l'embed ---
         embed = discord.Embed(
             title=f"📚 Projet en cours : `{current_project}`",
-            description=f"👤 **Promotion** : `{promo_name}`",
+            description=f"👤 **Promotion** : `{promo_title}`",
             color=discord.Color.green() if is_success else discord.Color.red(),
             timestamp=datetime.utcnow(),
         )
