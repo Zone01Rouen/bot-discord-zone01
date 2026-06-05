@@ -20,6 +20,7 @@ import aiohttp
 import discord
 from aiohttp import web
 
+from utils import interaction_store
 from utils.logger import logger
 
 # ---------------------------------------------------------------------------
@@ -393,6 +394,144 @@ async def _notify_discord(bot: discord.Client, discord_id: int, login: str) -> N
 
 
 # ---------------------------------------------------------------------------
+# Endpoint /api/notify : Dashboard → Bot (relances interactives)
+# ---------------------------------------------------------------------------
+
+def _build_notify_embed(payload: dict) -> discord.Embed:
+    """Construit l'embed de relance à partir du payload /api/notify."""
+    embed = discord.Embed(
+        title=str(payload.get("title", "Notification Zone01")),
+        description=str(payload.get("body", "")),
+        color=discord.Color.blurple(),
+    )
+    facts = payload.get("facts") or []
+    if isinstance(facts, list):
+        for fact in facts:
+            if not isinstance(fact, dict):
+                continue
+            name = str(fact.get("name", "​"))
+            value = str(fact.get("value", "​"))
+            embed.add_field(name=name, value=value, inline=True)
+    embed.set_footer(text="Zone01 — relances automatiques")
+    return embed
+
+
+async def _handle_notify(request: web.Request, bot: discord.Client) -> web.Response:
+    """
+    POST /api/notify — envoie un embed DM interactif au destinataire.
+
+    Auth : header X-Api-Key == API_ADMIN_KEY.
+    Voir le contrat §1 pour le schéma de la requête.
+    """
+    # --- Auth ---
+    api_key = request.headers.get("X-Api-Key", "")
+    if not API_ADMIN_KEY or api_key != API_ADMIN_KEY:
+        logger.warning("Appel /api/notify avec clé invalide", category="cr_relance")
+        return web.json_response({"ok": False, "error": "forbidden"}, status=403)
+
+    # --- Parse ---
+    try:
+        payload = await request.json()
+    except Exception:
+        return web.json_response(
+            {"ok": False, "error": "invalid_json"}, status=400
+        )
+
+    recipient_raw = payload.get("recipient_discord_id")
+    if not recipient_raw:
+        return web.json_response(
+            {"ok": False, "error": "missing recipient_discord_id"}, status=400
+        )
+    try:
+        recipient_id = int(recipient_raw)
+    except (TypeError, ValueError):
+        return web.json_response(
+            {"ok": False, "error": "invalid recipient_discord_id"}, status=400
+        )
+
+    notif_type = str(payload.get("type", "")) or "cr_rdv"
+    actions = payload.get("actions") or {}
+    if not isinstance(actions, dict):
+        actions = {}
+    url = payload.get("url")
+    coach_discord_id = payload.get("coach_discord_id")
+    context = payload.get("context") or {}
+
+    # --- Construction de l'embed + de la View ---
+    embed = _build_notify_embed(payload)
+
+    # Import local pour éviter une dépendance circulaire au chargement.
+    from cogs.cr_relance_cog import CRReplyView
+
+    view: discord.ui.View | None = None
+    if actions.get("reply_button") or url:
+        view = CRReplyView() if actions.get("reply_button") else discord.ui.View(timeout=None)
+        if url:
+            try:
+                view.add_item(
+                    discord.ui.Button(
+                        label="Ouvrir",
+                        url=str(url),
+                        style=discord.ButtonStyle.link,
+                        emoji="🔗",
+                    )
+                )
+            except Exception as e:
+                logger.warning(f"Bouton lien ignoré ({e})", category="cr_relance")
+
+    # --- Envoi du DM ---
+    try:
+        user = await bot.fetch_user(recipient_id)
+        if view is not None:
+            sent = await user.send(embed=embed, view=view)
+        else:
+            sent = await user.send(embed=embed)
+    except discord.Forbidden:
+        logger.warning(
+            f"DM interdit pour le destinataire {recipient_id}", category="cr_relance"
+        )
+        return web.json_response(
+            {"ok": False, "error": "dm_forbidden"}, status=502
+        )
+    except Exception as e:
+        logger.error(f"Échec de l'envoi du DM /api/notify : {e}", category="cr_relance")
+        return web.json_response(
+            {"ok": False, "error": "send_failed"}, status=502
+        )
+
+    # --- Réaction ✅ (cr_rdv uniquement) ---
+    if actions.get("rdv_reaction"):
+        try:
+            await sent.add_reaction("✅")
+        except Exception as e:
+            logger.warning(
+                f"Impossible d'ajouter la réaction ✅ : {e}", category="cr_relance"
+            )
+
+    # --- Persistance du contexte pour les interactions ultérieures ---
+    try:
+        interaction_store.put(
+            sent.id,
+            {
+                "context": context,
+                "coach_discord_id": (str(coach_discord_id) if coach_discord_id else None),
+                "type": notif_type,
+            },
+        )
+    except Exception as e:
+        logger.error(
+            f"Échec de la persistance de l'interaction {sent.id} : {e}",
+            category="cr_relance",
+        )
+
+    logger.success(
+        f"Relance '{notif_type}' envoyée à {recipient_id} (message_id={sent.id})",
+        category="cr_relance",
+    )
+    return web.json_response({"ok": True, "message_id": str(sent.id)})
+
+
+# ---------------------------------------------------------------------------
 # Démarrage du serveur
 # ---------------------------------------------------------------------------
 
@@ -402,9 +541,19 @@ async def start_web_server(bot: discord.Client, host: str = "0.0.0.0", port: int
     async def post_handler(request: web.Request) -> web.Response:
         return await _handle_post(request, bot)
 
+    async def notify_handler(request: web.Request) -> web.Response:
+        try:
+            return await _handle_notify(request, bot)
+        except Exception as e:
+            logger.error(f"Erreur inattendue /api/notify : {e}", category="cr_relance")
+            return web.json_response(
+                {"ok": False, "error": "internal_error"}, status=500
+            )
+
     app = web.Application()
     app.router.add_get("/connect", _handle_get)
     app.router.add_post("/connect", post_handler)
+    app.router.add_post("/api/notify", notify_handler)
 
     runner = web.AppRunner(app)
     await runner.setup()

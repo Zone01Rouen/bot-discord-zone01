@@ -55,3 +55,11 @@ notion_database_id = os.getenv("NOTION_DATABASE_ID")
 # Serveur web pour le flux de connexion Zone01
 connect_base_url = os.getenv("CONNECT_BASE_URL")
 connect_port = int(os.getenv("CONNECT_PORT"))
+
+# Intégration CR / relances Teams ↔ Discord
+# Clé partagée Dashboard → Bot (X-Api-Key sur /api/notify).
+API_ADMIN_KEY = os.getenv("API_ADMIN_KEY", "")
+# URL du callback Bot → Dashboard (ex. https://hub.../api/bot/callback).
+DASHBOARD_CALLBACK_URL = os.getenv("DASHBOARD_CALLBACK_URL", "")
+# Secret partagé Bot → Dashboard (X-Bot-Secret sur le callback).
+BOT_CALLBACK_SECRET = os.getenv("BOT_CALLBACK_SECRET", "")
