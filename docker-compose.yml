@@ -7,4 +7,12 @@ services:
       - ./data:/app/data
     restart: unless-stopped
     command: python bot.py
+    networks:
+      - default
+      - relances-net
+
+networks:
+  default:
+  relances-net:
+    external: true
 
