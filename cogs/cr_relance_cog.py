@@ -81,22 +81,23 @@ async def _callback(event: str, context: dict, actor_discord_id: str, data: dict
 # Modal « Répondre »
 # ---------------------------------------------------------------------------
 
-class CRReplyModal(discord.ui.Modal, title="Répondre"):
+class CRReplyModal(discord.ui.Modal, title="Compte-rendu d'audit"):
     """
-    Modal ouvert au clic sur « Répondre ».
-    Rappel : un modal Discord n'accepte QUE des TextInput (pas de select).
+    Modal ouvert au clic sur « Répondre » (demande de compte-rendu d'audit :
+    l'auditeur fait le retour sur l'audit QU'IL A RÉALISÉ sur le projet d'un
+    autre groupe). Rappel : un modal Discord n'accepte QUE des TextInput.
     """
 
     statut = discord.ui.TextInput(
-        label="Statut",
-        placeholder="RDV pris / en cours / blocage",
+        label="Comment s'est passé l'audit ?",
+        placeholder="Ex : bien déroulé / quelques soucis / projet à refaire",
         style=discord.TextStyle.short,
         required=True,
         max_length=100,
     )
     commentaire = discord.ui.TextInput(
-        label="Commentaire",
-        placeholder="Précisions (optionnel)",
+        label="Compte-rendu",
+        placeholder="Déroulé, points forts/faibles, soucis éventuels…",
         style=discord.TextStyle.paragraph,
         required=False,
         max_length=1000,
