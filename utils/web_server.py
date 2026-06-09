@@ -461,23 +461,32 @@ async def _handle_notify(request: web.Request, bot: discord.Client) -> web.Respo
     embed = _build_notify_embed(payload)
 
     # Import local pour éviter une dépendance circulaire au chargement.
-    from cogs.cr_relance_cog import CRReplyView
+    from cogs.cr_relance_cog import CRBookedView, CRReplyView
 
+    # Sélection de la View selon les actions demandées :
+    #   - book_button  → CRBookedView (bouton vert « Marquer le CR comme réservé »)
+    #   - reply_button → CRReplyView (bouton « Répondre » → modal)
+    #   - sinon         → aucun bouton (juste l'embed), sauf si une URL est fournie.
     view: discord.ui.View | None = None
-    if actions.get("reply_button") or url:
-        view = CRReplyView() if actions.get("reply_button") else discord.ui.View(timeout=None)
-        if url:
-            try:
-                view.add_item(
-                    discord.ui.Button(
-                        label="Ouvrir",
-                        url=str(url),
-                        style=discord.ButtonStyle.link,
-                        emoji="🔗",
-                    )
+    if actions.get("book_button"):
+        view = CRBookedView()
+    elif actions.get("reply_button"):
+        view = CRReplyView()
+
+    if url:
+        if view is None:
+            view = discord.ui.View(timeout=None)
+        try:
+            view.add_item(
+                discord.ui.Button(
+                    label="Ouvrir",
+                    url=str(url),
+                    style=discord.ButtonStyle.link,
+                    emoji="🔗",
                 )
-            except Exception as e:
-                logger.warning(f"Bouton lien ignoré ({e})", category="cr_relance")
+            )
+        except Exception as e:
+            logger.warning(f"Bouton lien ignoré ({e})", category="cr_relance")
 
     # --- Envoi du DM ---
     try:
@@ -498,15 +507,6 @@ async def _handle_notify(request: web.Request, bot: discord.Client) -> web.Respo
         return web.json_response(
             {"ok": False, "error": "send_failed"}, status=502
         )
-
-    # --- Réaction ✅ (cr_rdv uniquement) ---
-    if actions.get("rdv_reaction"):
-        try:
-            await sent.add_reaction("✅")
-        except Exception as e:
-            logger.warning(
-                f"Impossible d'ajouter la réaction ✅ : {e}", category="cr_relance"
-            )
 
     # --- Persistance du contexte pour les interactions ultérieures ---
     try:

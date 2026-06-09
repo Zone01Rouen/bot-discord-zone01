@@ -3,16 +3,16 @@ Cog des interactions de relance (CR / grouping / audit / milestone).
 
 Le dashboard déclenche le bot via `POST /api/notify` (cf. utils/web_server.py),
 qui envoie un embed DM au destinataire avec, selon le cas :
-  - une réaction ✅ (relances `cr_rdv`),
-  - un bouton « Répondre » (View persistante, ouvre un modal).
+  - un bouton vert « Marquer le CR comme réservé » (relances `cr_rdv`),
+  - un bouton « Répondre » (View persistante, ouvre un modal — rapports d'audit).
 
 Ce cog gère le retour des interactions vers le dashboard (callbacks) :
-  - clic « Répondre » → modal Statut/Commentaire → callback `reply_submitted`,
-  - réaction ✅ par le destinataire → DM coach + callback `rdv_confirmed`.
+  - clic « Marquer le CR comme réservé » → callback `rdv_confirmed` (sans modal),
+  - clic « Répondre » → modal Statut/Commentaire → callback `reply_submitted`.
 
 Persistance : le `context` est stocké côté `utils/interaction_store.py`
-(`data/pending_interactions.json`). La View est persistante (`timeout=None`,
-`custom_id="cr_reply"`) et ré-enregistrée au démarrage via `bot.add_view`,
+(`data/pending_interactions.json`). Les Views sont persistantes (`timeout=None`,
+`custom_id` stables) et ré-enregistrées au démarrage via `bot.add_view`,
 ce qui permet aux boutons de rester fonctionnels après un redémarrage du bot.
 """
 from __future__ import annotations
@@ -168,6 +168,71 @@ class CRReplyView(discord.ui.View):
 
 
 # ---------------------------------------------------------------------------
+# View persistante (bouton vert « Marquer le CR comme réservé »)
+# ---------------------------------------------------------------------------
+
+class CRBookedView(discord.ui.View):
+    """
+    View persistante portant le bouton vert « Marquer le CR comme réservé ».
+    Utilisée pour les relances `cr_rdv` : au clic, callback `rdv_confirmed`
+    (sans modal), puis le bouton est désactivé.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+
+    @discord.ui.button(
+        label="Marquer le CR comme réservé",
+        style=discord.ButtonStyle.success,
+        custom_id="cr_booked",
+        emoji="✅",
+    )
+    async def booked_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ) -> None:
+        try:
+            message_id = interaction.message.id if interaction.message else None
+            entry = interaction_store.get(message_id) if message_id else None
+
+            if not entry:
+                await interaction.response.send_message(
+                    "❓ Contexte introuvable pour cette relance.", ephemeral=True
+                )
+                logger.warning(
+                    f"Bouton cr_booked sans contexte (message_id={message_id})",
+                    category="cr_relance",
+                )
+                return
+
+            context = entry.get("context", {})
+            await _callback("rdv_confirmed", context, str(interaction.user.id))
+
+            # Désactive le bouton et édite le message d'origine.
+            button.disabled = True
+            await interaction.response.edit_message(view=self)
+            await interaction.followup.send(
+                "✅ CR marqué comme réservé !", ephemeral=True
+            )
+
+            # Nettoyage pour éviter un double déclenchement.
+            if message_id:
+                interaction_store.delete(message_id)
+            logger.success(
+                f"CR réservé via bouton (message_id={message_id}, actor={interaction.user.id})",
+                category="cr_relance",
+            )
+        except Exception as e:
+            logger.error(f"Erreur bouton cr_booked : {e}", category="cr_relance")
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(
+                        "Une erreur est survenue, réessayez plus tard.", ephemeral=True
+                    )
+            except Exception:
+                pass
+
+
+# ---------------------------------------------------------------------------
 # Cog
 # ---------------------------------------------------------------------------
 
@@ -176,54 +241,14 @@ class CRRelanceCog(commands.Cog):
         self.bot = bot
 
     async def cog_load(self) -> None:
-        # Ré-enregistre la View persistante : les boutons « Répondre » restent
+        # Ré-enregistre les Views persistantes : les boutons restent
         # fonctionnels même pour des messages envoyés avant un redémarrage.
+        self.bot.add_view(CRBookedView())
         self.bot.add_view(CRReplyView())
-        logger.success("View persistante CRReplyView enregistrée", category="cr_relance")
-
-    @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
-        try:
-            # Ignorer les réactions du bot lui-même.
-            if self.bot.user and payload.user_id == self.bot.user.id:
-                return
-            if str(payload.emoji) != "✅":
-                return
-
-            entry = interaction_store.get(payload.message_id)
-            if not entry or entry.get("type") != "cr_rdv":
-                return
-
-            context = entry.get("context", {})
-            coach_discord_id = entry.get("coach_discord_id")
-            actor_discord_id = payload.user_id
-
-            # (a) DM au coach si présent.
-            if coach_discord_id:
-                project_name = context.get("projectName", "?")
-                captain_login = context.get("captainLogin", "?")
-                try:
-                    coach = await self.bot.fetch_user(int(coach_discord_id))
-                    await coach.send(
-                        f"✅ CR pris — {project_name} (capitaine {captain_login})"
-                    )
-                except Exception as e:
-                    logger.error(
-                        f"Échec du DM coach {coach_discord_id} : {e}",
-                        category="cr_relance",
-                    )
-
-            # (b) Callback rdv_confirmed.
-            await _callback("rdv_confirmed", context, str(actor_discord_id))
-
-            # (c) Marquer traité pour éviter un double déclenchement.
-            interaction_store.delete(payload.message_id)
-            logger.success(
-                f"RDV confirmé via ✅ (message_id={payload.message_id}, actor={actor_discord_id})",
-                category="cr_relance",
-            )
-        except Exception as e:
-            logger.error(f"Erreur on_raw_reaction_add CR : {e}", category="cr_relance")
+        logger.success(
+            "Views persistantes CRBookedView + CRReplyView enregistrées",
+            category="cr_relance",
+        )
 
 
 async def setup(bot: commands.Bot) -> None:
