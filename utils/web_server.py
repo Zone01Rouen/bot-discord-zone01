@@ -28,7 +28,9 @@ from utils.logger import logger
 # ---------------------------------------------------------------------------
 
 ZONE01_DOMAIN = "zone01normandie.org"
-ZONE01_API_URL = "https://api-zone01-rouen.deno.dev/api/v1"
+ZONE01_API_URL = os.getenv(
+    "ZONE01_API_URL", "https://api-zone01-rouen.deno.dev/api/v1"
+)
 # Clé partagée pour autoriser les mutations de l'API Deno (doit être identique
 # à API_ADMIN_KEY côté API). Injectée au runtime via l'environnement.
 API_ADMIN_KEY = os.getenv("API_ADMIN_KEY", "")
