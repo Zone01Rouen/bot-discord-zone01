@@ -121,8 +121,8 @@ TOKEN='votre_token_discord'
 RAPIDAPI_KEY='votre_cle_rapidapi'
 QUERY_INTERNSHIP='Développeur Web Alternance France'
 QUERY_FULLTIME='Développeur Full Stack CDI France'
-NOTION_TOKEN='votre_token_notion'
-NOTION_DATABASE_ID='votre_database_id'
+HUB_FEEDBACK_URL=https://hub.zone01normandie.org/api/learner-feedback
+LEARNER_FEEDBACK_SECRET=
 ```
 
 ### Configuration Discord (`data/config.json`)
@@ -147,7 +147,6 @@ Pour une documentation complète incluant :
 - **APScheduler** - Planification de tâches automatiques
 - **Requests** - Requêtes HTTP
 - **python-dotenv** - Gestion des variables d'environnement
-- **Notion Client** - Intégration Notion (optionnel)
 
 ## 🔐 Sécurité
 

@@ -20,7 +20,7 @@ class Utilitaire(commands.Cog):
     @app_commands.describe(
         limit="Nombre de logs à afficher (par défaut: 20, max: 50)",
         level="Filtrer par niveau (ERROR, WARNING, INFO, SUCCESS, DEBUG)",
-        category="Filtrer par catégorie (bot, notion, config, general)"
+        category="Filtrer par catégorie (bot, retours, config, general)"
     )
     @app_commands.choices(level=[
         app_commands.Choice(name="Tous", value="all"),
@@ -32,7 +32,7 @@ class Utilitaire(commands.Cog):
     @app_commands.choices(category=[
         app_commands.Choice(name="Toutes", value="all"),
         app_commands.Choice(name="Bot", value="bot"),
-        app_commands.Choice(name="Notion", value="notion"),
+        app_commands.Choice(name="Retours", value="retours"),
         app_commands.Choice(name="Config", value="config"),
         app_commands.Choice(name="General", value="general"),
     ])

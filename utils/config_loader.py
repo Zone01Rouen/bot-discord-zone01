@@ -49,8 +49,12 @@ channel_progress_P1_2026 = config.get("channel_progress_P1_2026")
 forbidden_words = ["Openclassrooms", "MyDigitalSchool", "ISCOD", "EPSI", "2I Academy", "Studi CFA"]
 channel_id_feedback_alternance = config["channel_id_feedback_alternance"]
 role_feedback_alternance = int(os.getenv('ROLE_ID', 0)) if os.getenv('ROLE_ID') else None
-notion_token = os.getenv("NOTION_TOKEN")
-notion_database_id = os.getenv("NOTION_DATABASE_ID")
+# Retours apprenants (réponses en DM) → hub, POST /api/learner-feedback.
+HUB_FEEDBACK_URL = os.getenv(
+    "HUB_FEEDBACK_URL", "https://hub.zone01normandie.org/api/learner-feedback"
+)
+# Secret propre à cet appel (LEARNER_FEEDBACK_SECRET côté hub, même valeur).
+LEARNER_FEEDBACK_SECRET = os.getenv("LEARNER_FEEDBACK_SECRET", "")
 
 # Serveur web pour le flux de connexion Zone01
 connect_base_url = os.getenv("CONNECT_BASE_URL")

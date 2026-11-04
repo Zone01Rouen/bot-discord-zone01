@@ -76,7 +76,6 @@ Les dépendances principales sont :
 - `requests` - Pour les requêtes HTTP
 - `apscheduler` - Planification de tâches automatiques
 - `python-dotenv` - Gestion des variables d'environnement
-- `notion-client` - Intégration avec Notion (optionnel)
 
 ---
 
@@ -122,9 +121,9 @@ RAPIDAPI_KEY2='your_rapidapi_key2'
 QUERY_INTERNSHIP='Développeur Web Alternance France'
 QUERY_FULLTIME='Développeur Full Stack CDI France'
 
-# Configuration Notion (optionnel)
-NOTION_TOKEN='your_notion_token'
-NOTION_DATABASE_ID='your_notion_database_id'
+# Retours apprenants (réponses en DM) → hub
+HUB_FEEDBACK_URL=https://hub.zone01normandie.org/api/learner-feedback
+LEARNER_FEEDBACK_SECRET=
 ```
 
 **⚠️ IMPORTANT** : Ne partagez jamais votre fichier `.env` ou votre token Discord publiquement !
