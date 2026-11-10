@@ -132,6 +132,19 @@ class CRReplyModal(discord.ui.Modal, title="Compte-rendu d'audit"):
             await interaction.response.send_message(
                 "Merci, votre réponse a été transmise ✅", ephemeral=True
             )
+            # Confirmation persistante : marque le message d'origine comme
+            # répondu (badge ✅ + retrait du bouton Répondre).
+            try:
+                if interaction.message:
+                    embeds = interaction.message.embeds
+                    if embeds:
+                        emb = embeds[0]
+                        emb.add_field(name="\u200b", value="✅ Réponse enregistrée, merci !", inline=False)
+                        await interaction.message.edit(embed=emb, view=None)
+                    else:
+                        await interaction.message.edit(view=None)
+            except Exception as ee:
+                logger.warning(f"Edit message après réponse CR : {ee}", category="cr_relance")
         except Exception as e:
             logger.error(f"Erreur on_submit modal CR : {e}", category="cr_relance")
             try:
