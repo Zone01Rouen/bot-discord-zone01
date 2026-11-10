@@ -399,6 +399,18 @@ async def _notify_discord(bot: discord.Client, discord_id: int, login: str) -> N
 # Endpoint /api/notify : Dashboard → Bot (relances interactives)
 # ---------------------------------------------------------------------------
 
+# Pied de l'embed selon le type : une annonce de réservation faite dans le HUB
+# n'est pas une « relance ».
+_FOOTERS = {
+    "cr_booking": "Zone01 — réservations du HUB",
+}
+
+# Libellé par défaut du bouton lien, quand le HUB n'en fournit pas (url_label).
+_DEFAULT_URL_LABEL = "Ouvrir"
+# Discord refuse les libellés de bouton de plus de 80 caractères.
+_MAX_LABEL = 80
+
+
 def _build_notify_embed(payload: dict) -> discord.Embed:
     """Construit l'embed de relance à partir du payload /api/notify."""
     embed = discord.Embed(
@@ -414,7 +426,8 @@ def _build_notify_embed(payload: dict) -> discord.Embed:
             name = str(fact.get("name", "​"))
             value = str(fact.get("value", "​"))
             embed.add_field(name=name, value=value, inline=True)
-    embed.set_footer(text="Zone01 — relances automatiques")
+    notif_type = str(payload.get("type", "")) or "cr_rdv"
+    embed.set_footer(text=_FOOTERS.get(notif_type, "Zone01 — relances automatiques"))
     return embed
 
 
@@ -456,6 +469,9 @@ async def _handle_notify(request: web.Request, bot: discord.Client) -> web.Respo
     if not isinstance(actions, dict):
         actions = {}
     url = payload.get("url")
+    # Libellé du bouton lien (ex. « Réserver mon créneau » vers le HUB). Absent
+    # ou vide : « Ouvrir », comme avant — les anciens appels restent valables.
+    url_label = str(payload.get("url_label") or "").strip()[:_MAX_LABEL] or _DEFAULT_URL_LABEL
     coach_discord_id = payload.get("coach_discord_id")
     context = payload.get("context") or {}
 
@@ -481,7 +497,7 @@ async def _handle_notify(request: web.Request, bot: discord.Client) -> web.Respo
         try:
             view.add_item(
                 discord.ui.Button(
-                    label="Ouvrir",
+                    label=url_label,
                     url=str(url),
                     style=discord.ButtonStyle.link,
                     emoji="🔗",
@@ -511,6 +527,14 @@ async def _handle_notify(request: web.Request, bot: discord.Client) -> web.Respo
         )
 
     # --- Persistance du contexte pour les interactions ultérieures ---
+    # Seuls les messages à bouton interactif en ont besoin : une annonce sans
+    # bouton (réservation du HUB, lien seul) ne ferait que grossir le fichier.
+    if not (actions.get("book_button") or actions.get("reply_button")):
+        logger.success(
+            f"Notification '{notif_type}' envoyée à {recipient_id} (message_id={sent.id})",
+            category="cr_relance",
+        )
+        return web.json_response({"ok": True, "message_id": str(sent.id)})
     try:
         interaction_store.put(
             sent.id,

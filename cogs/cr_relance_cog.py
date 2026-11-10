@@ -206,7 +206,17 @@ class CRBookedView(discord.ui.View):
                 return
 
             context = entry.get("context", {})
-            await _callback("rdv_confirmed", context, str(interaction.user.id))
+            ok = await _callback("rdv_confirmed", context, str(interaction.user.id))
+            if not ok:
+                # Le HUB n'a pas enregistré la réservation : on garde le bouton
+                # actif (et le contexte) pour que l'apprenant puisse réessayer,
+                # au lieu de lui laisser croire que c'est noté.
+                await interaction.response.send_message(
+                    "⚠️ Le HUB n'a pas pu enregistrer ta réservation. Réessaie dans "
+                    "quelques minutes ; si ça continue, préviens l'équipe.",
+                    ephemeral=True,
+                )
+                return
 
             # Désactive le bouton et édite le message d'origine.
             button.disabled = True
