@@ -3,6 +3,10 @@ services:
     build: .
     container_name: discord_bot
     env_file: .env
+    environment:
+      - VIRTUAL_HOST=bot.zone01normandie.org
+      - VIRTUAL_PORT=8080
+      - LETSENCRYPT_HOST=bot.zone01normandie.org
     volumes:
       - ./data:/app/data
     restart: unless-stopped
@@ -10,9 +14,11 @@ services:
     networks:
       - default
       - relances-net
+      - nginx-network
 
 networks:
   default:
   relances-net:
     external: true
-
+  nginx-network:
+    external: true

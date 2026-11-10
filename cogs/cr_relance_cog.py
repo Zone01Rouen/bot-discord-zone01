@@ -132,6 +132,19 @@ class CRReplyModal(discord.ui.Modal, title="Compte-rendu d'audit"):
             await interaction.response.send_message(
                 "Merci, votre réponse a été transmise ✅", ephemeral=True
             )
+            # Confirmation persistante : marque le message d'origine comme
+            # répondu (badge ✅ + retrait du bouton Répondre).
+            try:
+                if interaction.message:
+                    embeds = interaction.message.embeds
+                    if embeds:
+                        emb = embeds[0]
+                        emb.add_field(name="\u200b", value="✅ Réponse enregistrée, merci !", inline=False)
+                        await interaction.message.edit(embed=emb, view=None)
+                    else:
+                        await interaction.message.edit(view=None)
+            except Exception as ee:
+                logger.warning(f"Edit message après réponse CR : {ee}", category="cr_relance")
         except Exception as e:
             logger.error(f"Erreur on_submit modal CR : {e}", category="cr_relance")
             try:
@@ -206,7 +219,17 @@ class CRBookedView(discord.ui.View):
                 return
 
             context = entry.get("context", {})
-            await _callback("rdv_confirmed", context, str(interaction.user.id))
+            ok = await _callback("rdv_confirmed", context, str(interaction.user.id))
+            if not ok:
+                # Le HUB n'a pas enregistré la réservation : on garde le bouton
+                # actif (et le contexte) pour que l'apprenant puisse réessayer,
+                # au lieu de lui laisser croire que c'est noté.
+                await interaction.response.send_message(
+                    "⚠️ Le HUB n'a pas pu enregistrer ta réservation. Réessaie dans "
+                    "quelques minutes ; si ça continue, préviens l'équipe.",
+                    ephemeral=True,
+                )
+                return
 
             # Désactive le bouton et édite le message d'origine.
             button.disabled = True

@@ -4,5 +4,41 @@
     "level": "INFO",
     "category": "bot",
     "message": "Logs effac\u00e9s par its_robin_hq"
+  },
+  {
+    "timestamp": "2026-11-10T11:45:17.935177",
+    "level": "SUCCESS",
+    "category": "cr_relance",
+    "message": "Notification 'cr_rdv' envoy\u00e9e \u00e0 123 (message_id=1001)"
+  },
+  {
+    "timestamp": "2026-11-10T11:45:17.935603",
+    "level": "SUCCESS",
+    "category": "cr_relance",
+    "message": "Notification 'cr_booking' envoy\u00e9e \u00e0 123 (message_id=1002)"
+  },
+  {
+    "timestamp": "2026-11-10T11:45:17.935731",
+    "level": "SUCCESS",
+    "category": "cr_relance",
+    "message": "Relance 'cr_rdv' envoy\u00e9e \u00e0 123 (message_id=1003)"
+  },
+  {
+    "timestamp": "2026-11-10T11:45:17.935824",
+    "level": "SUCCESS",
+    "category": "cr_relance",
+    "message": "Notification 'cr_rdv' envoy\u00e9e \u00e0 123 (message_id=1004)"
+  },
+  {
+    "timestamp": "2026-11-10T11:45:29.931179",
+    "level": "ERROR",
+    "category": "cr_relance",
+    "message": "\u00c9chec du callback 'rdv_confirmed' : Cannot connect to host 127.0.0.1:9 ssl:default [Connect call failed ('127.0.0.1', 9)]"
+  },
+  {
+    "timestamp": "2026-11-10T11:45:29.931480",
+    "level": "SUCCESS",
+    "category": "cr_relance",
+    "message": "CR r\u00e9serv\u00e9 via bouton (message_id=42, actor=7)"
   }
 ]

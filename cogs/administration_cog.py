@@ -11,7 +11,7 @@ from utils.config_loader import forbidden_words, channel_modo_id
 from utils.utils_fulltime import send_cdilist
 from utils.utils_function import is_admin, is_admin_slash
 from utils.utils_internship import send_jobslist
-from utils.timeline import fetch_and_send_progress
+from utils.timeline import fetch_and_send_progress, extract_current_project
 
 class Administration(commands.Cog):
     def __init__(self, bot):
@@ -320,7 +320,7 @@ class Administration(commands.Cog):
             progress_emoji = "🟩" * (progress_val // 10) + "🟥" * (10 - (progress_val // 10))
 
             embed_progress = discord.Embed(
-                title=f"📚 Projet en cours : `{item.get('currentProjects', {}).get('single', 'Non spécifié')}`",
+                title=f"📚 Projet en cours : `{extract_current_project(item)}`",
                 description=f"👤 **Promotion** : `{promotion_title}`",
                 color=discord.Color.green() if item.get('status') == 'success' else discord.Color.red(),
                 timestamp=datetime.now(timezone.utc)

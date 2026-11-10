@@ -322,6 +322,31 @@ Le bot permet de gérer facilement la configuration via des commandes slash.
 
 ---
 
+### Notifications envoyées par le HUB (`POST /api/notify`)
+
+Le HUB (`hub.zone01normandie.org`) fait envoyer ses messages par le bot :
+relances de code review, rapports d'audit, annonces des réservations.
+En-tête `X-Api-Key: API_ADMIN_KEY`. Corps JSON :
+
+| Champ | Rôle |
+|---|---|
+| `recipient_discord_id` | destinataire du DM (obligatoire) |
+| `type` | `cr_rdv`, `audit_report`, `grouping`, `milestone`, `cr_booking` (annonce d'une réservation faite dans le HUB) |
+| `title`, `body`, `facts[]` | contenu de l'embed |
+| `url`, `url_label` | bouton lien ; `url_label` facultatif (« Ouvrir » par défaut, 80 caractères au plus) |
+| `actions.book_button` | bouton vert « Marquer le CR comme réservé » (ancien circuit Google Agenda) |
+| `actions.reply_button` | bouton « Répondre » (rapport d'audit) |
+| `context` | renvoyé tel quel au HUB dans les callbacks |
+
+Seuls les messages à bouton interactif sont gardés dans
+`data/pending_interactions.json`. Si le HUB ne confirme pas un clic sur
+« Marquer le CR comme réservé », le bouton reste actif et l'apprenant est
+invité à réessayer.
+
+Depuis la réservation dans le HUB, un coach qui prend ses rendez-vous dans le
+HUB ne reçoit plus de bouton « réservé » : le lien mène à
+`/mes-code-reviews` et le HUB annonce lui-même la réservation (`cr_booking`).
+
 ## 🎮 Commandes disponibles
 
 ### Commandes Slash (/)
