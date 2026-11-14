@@ -1,0 +1,32 @@
+# Mises à jour groupées et hebdomadaires : une PR à relire par semaine, pas une
+# par paquet. Les majeures restent séparées : elles se lisent une par une.
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    groups:
+      mineures:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    groups:
+      mineures:
+        update-types:
+          - "minor"
+          - "patch"
