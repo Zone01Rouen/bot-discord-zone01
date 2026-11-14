@@ -1,0 +1,24 @@
+# Audit de sécurité hebdomadaire des dépendances Python (le lundi, 7 h à Paris).
+# Ce dépôt est public : il ne peut pas appeler les workflows internes de
+# Zone01Rouen/.github, d'où ce fichier complet.
+name: Audit de sécurité
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pip:
+    name: Audit des dépendances
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: pip-audit
+        run: pip install --quiet pip-audit && pip-audit -r requirements.txt
