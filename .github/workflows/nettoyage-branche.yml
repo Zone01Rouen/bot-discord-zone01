@@ -1,0 +1,35 @@
+# Une branche de PR fusionnée n'a plus de raison d'exister : son travail est
+# dans la branche de destination et le commit de fusion garde son nom.
+#
+# Les branches longues sont épargnées : main, master, staging et develop.
+# Quand develop (ou staging) part en production par une PR, elle DOIT
+# survivre — c'est une branche d'intégration, pas une branche de tâche.
+#
+# Même fichier dans tous les dépôts de Zone01Rouen : le modifier partout.
+name: Nettoyage des branches fusionnées
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  supprimer:
+    name: Supprimer la branche de la PR
+    if: >-
+      github.event.pull_request.merged == true
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && !contains(fromJSON('["main", "master", "staging", "develop"]'), github.event.pull_request.head.ref)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Supprimer ${{ github.event.pull_request.head.ref }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCHE: ${{ github.event.pull_request.head.ref }}
+        run: |
+          echo "PR #${{ github.event.pull_request.number }} fusionnée dans ${{ github.event.pull_request.base.ref }}"
+          gh api -X DELETE "repos/${{ github.repository }}/git/refs/heads/$BRANCHE" \
+            && echo "branche $BRANCHE supprimée" \
+            || echo "branche $BRANCHE déjà absente ou protégée — rien à faire"
