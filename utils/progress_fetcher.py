@@ -7,7 +7,7 @@ import aiohttp
 # il s'authentifie donc avec le secret partagé des appels machine — le même que
 # les crons du VPS (CRON_SECRET côté hub, HUB_API_SECRET ici).
 HUB_TIMELINE_URL = os.getenv(
-    "HUB_TIMELINE_URL", "https://hub.zone01normandie.org/api/timeline_project"
+    "HUB_TIMELINE_URL", "https://hub.start01.fr/api/timeline_project"
 )
 HUB_API_SECRET = os.getenv("HUB_API_SECRET", "")
 

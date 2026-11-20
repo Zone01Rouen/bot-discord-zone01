@@ -51,7 +51,7 @@ channel_id_feedback_alternance = config["channel_id_feedback_alternance"]
 role_feedback_alternance = int(os.getenv('ROLE_ID', 0)) if os.getenv('ROLE_ID') else None
 # Retours apprenants (réponses en DM) → hub, POST /api/learner-feedback.
 HUB_FEEDBACK_URL = os.getenv(
-    "HUB_FEEDBACK_URL", "https://hub.zone01normandie.org/api/learner-feedback"
+    "HUB_FEEDBACK_URL", "https://hub.start01.fr/api/learner-feedback"
 )
 # Secret propre à cet appel (LEARNER_FEEDBACK_SECRET côté hub, même valeur).
 LEARNER_FEEDBACK_SECRET = os.getenv("LEARNER_FEEDBACK_SECRET", "")
