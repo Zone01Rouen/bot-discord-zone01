@@ -4,9 +4,9 @@ services:
     container_name: discord_bot
     env_file: .env
     environment:
-      - VIRTUAL_HOST=bot.zone01normandie.org
+      - VIRTUAL_HOST=bot.zone01normandie.org,bot.start01.fr
       - VIRTUAL_PORT=8080
-      - LETSENCRYPT_HOST=bot.zone01normandie.org
+      - LETSENCRYPT_HOST=bot.zone01normandie.org,bot.start01.fr
     volumes:
       - ./data:/app/data
     restart: unless-stopped
